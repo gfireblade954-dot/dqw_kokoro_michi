@@ -332,7 +332,7 @@ class _KokoroMichiPageState extends State<KokoroMichiPage> {
       children: bonuses.asMap().entries.map((entry) {
         final i = entry.key;
         final b = entry.value;
-        final isSkill = i == 0 && _isSkillName(b);
+        final isSkill = _isSkillName(b);
         final textStyle = isSkill
             ? const TextStyle(
                 fontWeight: FontWeight.bold,
