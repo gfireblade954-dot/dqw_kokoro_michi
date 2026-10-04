@@ -294,6 +294,19 @@ class _KokoroMichiPageState extends State<KokoroMichiPage> {
               const SizedBox(height: 6),
             ],
 
+            // こころ条件が未判明のルートはチップの代わりに注記を表示
+            if (route.kokoroUnknown) ...[
+              Text(
+                'こころ条件は未判明',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontStyle: FontStyle.italic,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 6),
+            ],
+
             _bonusList(route.bonuses, fontSize: 12),
           ],
         ),
@@ -329,9 +342,7 @@ class _KokoroMichiPageState extends State<KokoroMichiPage> {
   Widget _bonusList(List<String> bonuses, {double fontSize = 13}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: bonuses.asMap().entries.map((entry) {
-        final i = entry.key;
-        final b = entry.value;
+      children: bonuses.map((b) {
         final isSkill = _isSkillName(b);
         final textStyle = isSkill
             ? const TextStyle(

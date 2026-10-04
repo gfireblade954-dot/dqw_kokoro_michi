@@ -20,12 +20,14 @@ JOB_ID_MAP = {
     '天地雷鳴士':     'tenjiraimeishi',
     '魔人':           'majin',
     '時渡りの剣士':   'tokiwatari',
+    '魔弾の剣士':     'madan_kenshi',
 }
 
 # 出力順
 JOB_ORDER = [
     'ゴッドハンド', '大魔道士', '大神官', 'ニンジャ', '魔剣士',
     '守り人', 'ドラゴン', '天地雷鳴士', '魔人', '時渡りの剣士',
+    '魔弾の剣士',
 ]
 
 # 各職業の分岐名 (branchA, branchB)
@@ -40,13 +42,17 @@ BRANCH_MAP = {
     'tenjiraimeishi': ('天道',     '地道'),
     'majin':          ('超人道',   '超魔道'),
     'tokiwatari':     ('巡行道',   '遡行道'),
+    'madan_kenshi':   ('突撃道',   '援撃道'),
 }
 
 # michi_type 判定用セット（正規化後の道名で完全一致）
-BRANCH_A_SET = {'武道', '魔力道', '祈道', '風道', '魔道', 'まもり道', '竜道', '天道', '超人道', '巡行道'}
-BRANCH_B_SET = {'守護道', '理力道', '舞道', '波道', '刃道', 'ささえ道', '人道', '地道', '超魔道', '遡行道'}
+BRANCH_A_SET = {'武道', '魔力道', '祈道', '風道', '魔道', 'まもり道', '竜道', '天道', '超人道', '巡行道', '突撃道'}
+BRANCH_B_SET = {'守護道', '理力道', '舞道', '波道', '刃道', 'ささえ道', '人道', '地道', '超魔道', '遡行道', '援撃道'}
 
 # 丸数字 → 整数
+# こころ条件が未判明であることを示すCSV上のマーカー
+KOKORO_UNKNOWN_MARK = '未判明'
+
 MARU_NUM = {'①': 1, '②': 2, '③': 3, '④': 4, '⑤': 5,
             '⑥': 6, '⑦': 7, '⑧': 8, '⑨': 9, '⑩': 10}
 
@@ -147,6 +153,8 @@ def generate_dart(jobs_data: dict) -> str:
         '  final bool needsDarma;',
         '  final List<String> bonuses;',
         '  final List<KokoroEntry> kokoroList;',
+        '  // こころ条件が未判明のルートは true',
+        '  final bool kokoroUnknown;',
         '  const KokoroMichiRoute({',
         '    required this.michi,',
         '    required this.michiType,',
@@ -155,6 +163,7 @@ def generate_dart(jobs_data: dict) -> str:
         '    required this.needsDarma,',
         '    required this.bonuses,',
         '    required this.kokoroList,',
+        '    this.kokoroUnknown = false,',
         '  });',
         '}',
         '',
@@ -206,6 +215,8 @@ def generate_dart(jobs_data: dict) -> str:
             lines.append(f"        needsDarma: {dart_bool(r['needs_darma'])},")
             lines.append(f'        bonuses: [{bonus_dart}],')
             lines.append(f'        kokoroList: [{kokoro_dart}],')
+            if r['kokoro_unknown']:
+                lines.append('        kokoroUnknown: true,')
             lines.append('      ),')
 
         lines.append('    ],')
@@ -251,12 +262,18 @@ def main():
 
             # こころ
             kokoro_list = []
+            kokoro_unknown = False
             for cell in kokoro_cols:
+                # 未判明マーカーはこころとして扱わずフラグのみ立てる
+                if cell.strip() == KOKORO_UNKNOWN_MARK:
+                    kokoro_unknown = True
+                    continue
                 k = parse_kokoro(cell)
                 if k:
                     kokoro_list.append(k)
                     total_kokoro += 1
             parsed['kokoroList'] = kokoro_list
+            parsed['kokoro_unknown'] = kokoro_unknown
 
             jobs_data[job_name].append(parsed)
 
